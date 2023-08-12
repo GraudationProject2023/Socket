@@ -11,17 +11,17 @@ const Chat = () => {
   const [socketData, setSocketData] = useState();
 
   const messageListRef = useRef(null);
-  const [messageListHeight, setMessageListHeight] = useState(0);
+  const onText = (e) => {
+    setMsg(e.target.value);
+  };
   
   useEffect(() => {
-    if(messageListRef.current){
-      setMessageListHeight(messageListRef.current.clientHeight);
+    if (messageListRef.current) {
+      messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
     }
-  },[chatt]);
-
+  }, [chatt, msg]);
 
   const ws = useRef(null); //websocket을 담는 변수, 컴포넌트가 변경될 때 객체가 유지될 수 있도록 ref로 저장
-
 
   const msgBox = chatt.map((item, idx) => (
     <div key={idx} className={item.name === name ? "me" : "other"}>
@@ -121,10 +121,7 @@ const Chat = () => {
     position: relative;
   `;
 
-
-  const onText = (e) => {
-    setMsg(e.target.value);
-  };
+  
 
   const webSocketLogin = useCallback(() => {
     ws.current = new WebSocket("");
@@ -144,6 +141,7 @@ const Chat = () => {
       };
 
       setChatt([...chatt, data]); // Add the new message to the mock data
+      messageListRef.current.focus();
     } else {
       alert("Message cannot be empty.");
       document.getElementById("msg").focus();
@@ -157,6 +155,7 @@ const Chat = () => {
     if (event.key === "Enter") {
       send();
     }
+    
   }
 
   useEffect(() => {
@@ -231,7 +230,7 @@ const Chat = () => {
             />
           </ChatHeader>
           <hr />
-          <MessageList>
+          <MessageList ref={messageListRef}>
             {chatt.map((item, idx) => (
               <MessageContainer key={idx} isMe={item.name === name}>
                 <MessageBubble isMe={item.name === name}>
@@ -249,7 +248,13 @@ const Chat = () => {
         </ChatContainer>
       </ChatWrapper>
       <div className="input_text">
-        <input type="text" onChange={onText} onKeyDown={keyPress} />
+        <input
+          type="text"
+          ref={messageListRef}
+          value={msg}
+          onChange={onText}
+          onKeyDown={keyPress}
+        />
       </div>
     </>
   );
