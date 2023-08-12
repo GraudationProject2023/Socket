@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createGlobalStyle, styled } from "styled-components";
 import reset from "styled-reset";
+import "./Main.css";
 
 const Chat = () => {
   const [msg, setMsg] = useState("");
@@ -9,7 +10,18 @@ const Chat = () => {
   const [checkLog, setCheckLog] = useState(true); // Set to true for mock data
   const [socketData, setSocketData] = useState();
 
+  const messageListRef = useRef(null);
+  const [messageListHeight, setMessageListHeight] = useState(0);
+  
+  useEffect(() => {
+    if(messageListRef.current){
+      setMessageListHeight(messageListRef.current.clientHeight);
+    }
+  },[chatt]);
+
+
   const ws = useRef(null); //websocket을 담는 변수, 컴포넌트가 변경될 때 객체가 유지될 수 있도록 ref로 저장
+
 
   const msgBox = chatt.map((item, idx) => (
     <div key={idx} className={item.name === name ? "me" : "other"}>
@@ -54,6 +66,7 @@ const Chat = () => {
   `;
 
   const MessageList = styled.div`
+    height: 300px;
     max-height: 300px;
     overflow-y: auto;
   `;
@@ -74,27 +87,17 @@ const Chat = () => {
     color: #333;
   `;
 
-  const InputSection = styled.div`
-    display: flex;
-    margin-top: 20px;
-  `;
-
   const NameInput = styled.input`
+    margin-left: 25%;
+    text-align: center;
     flex: 1;
     padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  `;
-
-  const MessageInput = styled.textarea`
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    resize: vertical;
+    border: none;
+    background-color: white;
   `;
 
   const SendButton = styled.button`
+    margin-left: 80%;
     background-color: #007bff;
     color: #fff;
     border: none;
@@ -118,10 +121,10 @@ const Chat = () => {
     position: relative;
   `;
 
-  const onText = (event) => {
-    setMsg(event.target.value);
+
+  const onText = (e) => {
+    setMsg(e.target.value);
   };
-  
 
   const webSocketLogin = useCallback(() => {
     ws.current = new WebSocket("");
@@ -149,6 +152,12 @@ const Chat = () => {
 
     setMsg("");
   };
+
+  function keyPress(event) {
+    if (event.key === "Enter") {
+      send();
+    }
+  }
 
   useEffect(() => {
     if (checkLog) {
@@ -211,8 +220,17 @@ const Chat = () => {
       <GlobalStyle />
       <ChatWrapper>
         <ChatContainer>
-          <ChatHeader>WebSocket Chatting</ChatHeader>
-          <br />
+          <ChatHeader>
+            <NameInput
+              disabled={checkLog}
+              placeholder="Enter your name"
+              type="text"
+              id="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </ChatHeader>
+          <hr />
           <MessageList>
             {chatt.map((item, idx) => (
               <MessageContainer key={idx} isMe={item.name === name}>
@@ -226,29 +244,13 @@ const Chat = () => {
               </MessageContainer>
             ))}
           </MessageList>
-          <InputSection>
-            <NameInput
-              disabled={checkLog}
-              placeholder="Enter your name"
-              type="text"
-              id="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-            <MessageInput
-              id="msg"
-              value={msg}
-              onChange={onText}
-              onKeyDown={(ev) => {
-                if (ev.keyCode === 13) {
-                  send();
-                }
-              }}
-            />
-            <SendButton onClick={send}>Send</SendButton>
-          </InputSection>
+          <hr />
+          <SendButton onClick={send}>Send</SendButton>
         </ChatContainer>
       </ChatWrapper>
+      <div className="input_text">
+        <input type="text" onChange={onText} onKeyDown={keyPress} />
+      </div>
     </>
   );
 };
